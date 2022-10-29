@@ -1,4 +1,4 @@
-$Template = 'D:\Repos\scapim-adf\ADF\bicep\foo2\foo\devOpsRoleHAAPP.bicep'
+$Template = './devOpsRoleHAAPP.bicep'
 
 # $MgId = 'HA-APP-online'
 
