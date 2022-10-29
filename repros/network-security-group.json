@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "shortname": {
+            "value": "happy"
+        },
+        "devprod": {
+            "value": "dev"
+        },
+        "location": {
+            "value": "centralus"
+        },
+        "sequence": {
+            "value": "001"
+        },
+        "securityRules": {
+            "value": [
+                {
+                    "priority": 100,
+                    "name": "AllowRequiredGatewayPorts",
+                    "description": "https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure",
+                    "access" : "Allow",
+                    "destinationAddressPrefix" : "*",
+                    "destinationAddressPrefixes" : [],
+                    "destinationPortRange": "65200-65535",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "protocol": "*",
+                    "sourceAddressPrefix": "GatewayManager",
+                    "sourceAddressPrefixes": [],
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": []
+                },
+                {
+                    "priority": 110,
+                    "name": "AllowAzureLoadBalancer",
+                    "description": "https://docs.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure",
+                    "access" : "Allow",
+                    "destinationAddressPrefix" : "*",
+                    "destinationAddressPrefixes" : [],
+                    "destinationPortRange": "*",
+                    "destinationPortRanges": [],
+                    "direction": "Inbound",
+                    "protocol": "*",
+                    "sourceAddressPrefix": "AzureLoadBalancer",
+                    "sourceAddressPrefixes": [],
+                    "sourcePortRange": "*",
+                    "sourcePortRanges": []
+                }
+           ]
+        }
+    }
+}

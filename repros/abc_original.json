@@ -1,0 +1,109 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.9.91.4880",
+      "templateHash": "3898182960255837833"
+    }
+  },
+  "parameters": {
+    "name": {
+      "type": "string",
+      "defaultValue": "test"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "apiVersion": "2022-03-01",
+      "name": "[parameters('name')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "foo",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "id": {
+            "value": "[resourceId('Microsoft.Compute/availabilitySets', parameters('name'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.91.4880",
+              "templateHash": "5493977121203925105"
+            }
+          },
+          "parameters": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "id": {
+              "type": "string",
+              "value": "[parameters('id')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/availabilitySets', parameters('name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "foo2",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "id": {
+            "value": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', split(reference(resourceId('Microsoft.Resources/deployments', 'foo')).outputs.id.value, '/')[2], split(reference(resourceId('Microsoft.Resources/deployments', 'foo')).outputs.id.value, '/')[4]), 'Microsoft.Compute/availabilitySets', parameters('name'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.91.4880",
+              "templateHash": "5493977121203925105"
+            }
+          },
+          "parameters": {
+            "id": {
+              "type": "string"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "id": {
+              "type": "string",
+              "value": "[parameters('id')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'foo')]"
+      ]
+    }
+  ]
+}

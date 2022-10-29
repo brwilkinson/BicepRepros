@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "languageVersion": "1.9-experimental",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "EXPERIMENTAL_WARNING": "Symbolic name support in ARM is experimental, and should be enabled for testing purposes only. Do not enable this setting for any production usage, or you may be unexpectedly broken at any time!",
+    "_generator": {
+      "name": "bicep",
+      "version": "0.9.91.4880",
+      "templateHash": "10122495515633215635"
+    }
+  },
+  "parameters": {
+    "eventgriddomainname": {
+      "type": "string",
+      "defaultValue": "eventgridodmainanme007"
+    },
+    "eventgridtopicname": {
+      "type": "string",
+      "defaultValue": "eventdomaintopicname007"
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus"
+    },
+    "servicebustopicname": {
+      "type": "string",
+      "defaultValue": "sbt07-dev-001"
+    },
+    "servicebusresourcegroupname": {
+      "type": "string",
+      "defaultValue": "test-sbusmodule-bicep-07"
+    }
+  },
+  "resources": {
+    "servicebustopic": {
+      "existing": true,
+      "type": "Microsoft.ServiceBus/namespaces/topics",
+      "apiVersion": "2021-11-01",
+      "resourceGroup": "[parameters('servicebusresourcegroupname')]",
+      "name": "[parameters('servicebustopicname')]"
+    },
+    "eventgriddomain": {
+      "type": "Microsoft.EventGrid/domains",
+      "apiVersion": "2022-06-15",
+      "name": "[parameters('eventgriddomainname')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    "eventdomaintopic": {
+      "type": "Microsoft.EventGrid/domains/topics",
+      "apiVersion": "2022-06-15",
+      "name": "[format('{0}/{1}', parameters('eventgriddomainname'), parameters('eventgridtopicname'))]",
+      "dependsOn": [
+        "eventgriddomain"
+      ]
+    },
+    "eventsubscription": {
+      "type": "Microsoft.EventGrid/domains/topics/eventSubscriptions",
+      "apiVersion": "2022-06-15",
+      "name": "[format('{0}/{1}/{2}', parameters('eventgriddomainname'), parameters('eventgridtopicname'), 'evntsub')]",
+      "properties": {
+        "destination": {
+          "endpointType": "ServiceBusTopic",
+          "properties": {
+            "resourceId": "[resourceInfo('servicebustopic').id]"
+          }
+        }
+      },
+      "dependsOn": [
+        "eventdomaintopic"
+      ]
+    }
+  }
+}

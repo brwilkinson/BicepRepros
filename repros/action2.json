@@ -1,0 +1,131 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.9.91.4880",
+      "templateHash": "5399404114872384892"
+    }
+  },
+  "parameters": {
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "ACU1-BRW-AOA-RG-T5"
+    },
+    "sshKeyName": {
+      "type": "string",
+      "defaultValue": "jmp01"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "foo2",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "resourceGroupName": {
+            "value": "[parameters('resourceGroupName')]"
+          },
+          "sshKeyName": {
+            "value": "[parameters('sshKeyName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.91.4880",
+              "templateHash": "1951197641123766284"
+            }
+          },
+          "parameters": {
+            "resourceGroupName": {
+              "type": "string",
+              "defaultValue": "ACU1-BRW-AOA-RG-T5"
+            },
+            "sshKeyName": {
+              "type": "string",
+              "defaultValue": "jmp01"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "id": {
+              "type": "string",
+              "value": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, parameters('resourceGroupName')), 'Microsoft.Compute/sshPublicKeys', parameters('sshKeyName'))]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "foo",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "key": {
+            "value": "[reference(resourceId('Microsoft.Compute/sshPublicKeys', parameters('sshKeyName')), '2022-03-01').publicKey]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.91.4880",
+              "templateHash": "17722905045850797627"
+            }
+          },
+          "parameters": {
+            "key": {
+              "type": "string"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "key": {
+              "type": "string",
+              "value": "[parameters('key')]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "publicKey": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Compute/sshPublicKeys', parameters('sshKeyName')), '2022-03-01').publicKey]"
+    },
+    "resourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Compute/sshPublicKeys', parameters('sshKeyName'))]"
+    },
+    "resourceId2": {
+      "type": "string",
+      "value": "[split(resourceId('Microsoft.Compute/sshPublicKeys', parameters('sshKeyName')), '/')[2]]"
+    },
+    "resourceId4": {
+      "type": "string",
+      "value": "[split(resourceId('Microsoft.Compute/sshPublicKeys', parameters('sshKeyName')), '/')[4]]"
+    },
+    "foo": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'foo')).outputs.key.value]"
+    }
+  }
+}

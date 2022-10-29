@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.7.95.31730",
+      "templateHash": "2204595347874921539"
+    }
+  },
+  "parameters": {
+    "ep": {
+      "type": "object"
+    }
+  },
+  "resources": [
+    {
+      "condition": "[contains(parameters('ep'), 'certName')]",
+      "type": "Microsoft.Cdn/profiles/secrets",
+      "apiVersion": "2021-06-01",
+      "name": "[format('{0}/{1}', 'myprofile', parameters('ep').certName)]",
+      "properties": {
+        "parameters": {
+          "type": "CustomerCertificate",
+          "useLatestVersion": true,
+          "secretSource": {
+            "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, 'HubRGName'), 'Microsoft.KeyVault/vaults/secrets', 'mykn', parameters('ep').certName)]"
+          }
+        }
+      }
+    }
+  ]
+}

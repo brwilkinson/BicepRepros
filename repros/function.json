@@ -1,0 +1,308 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.9.1.41621",
+      "templateHash": "11289036251364459348"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "westeurope"
+    },
+    "netFrameworkVersion": {
+      "type": "string",
+      "defaultValue": "v4.0"
+    },
+    "ftpsState": {
+      "type": "string",
+      "defaultValue": "Disabled",
+      "allowedValues": [
+        "AllAllowed",
+        "FtpsOnly",
+        "Disabled"
+      ]
+    },
+    "DnsZoneSubscriptionID": {
+      "type": "string",
+      "defaultValue": "a28d23b2-6c69-42c6-9d0a-953e54499bdc"
+    },
+    "DnsZoneRG": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "customDomainName": {
+      "type": "string",
+      "defaultValue": "testRg"
+    },
+    "dnsZoneName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "dnsRecordTTL": {
+      "type": "int",
+      "defaultValue": 300
+    }
+  },
+  "variables": {
+    "fqdn": "[format('{0}.{1}', parameters('customDomainName'), parameters('dnsZoneName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2021-03-01",
+      "name": "testPlan",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "B1",
+        "capacity": 1
+      },
+      "properties": {
+        "reserved": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2021-03-01",
+      "name": "webSiteName",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', 'testPlan')]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "minTlsVersion": "1.2",
+          "http20Enabled": true,
+          "ftpsState": "[parameters('ftpsState')]",
+          "use32BitWorkerProcess": false,
+          "netFrameworkVersion": "[parameters('netFrameworkVersion')]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', 'testPlan')]"
+      ]
+    },
+    {
+      "condition": "[and(not(empty(parameters('customDomainName'))), not(empty(parameters('dnsZoneName'))))]",
+      "type": "Microsoft.Web/sites/hostNameBindings",
+      "apiVersion": "2021-03-01",
+      "name": "[format('{0}/{1}', 'webSiteName', variables('fqdn'))]",
+      "properties": {
+        "azureResourceName": "[variables('fqdn')]",
+        "azureResourceType": "Website",
+        "customHostNameDnsRecordType": "A",
+        "siteName": "webSiteName"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'webSiteName')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', parameters('DnsZoneSubscriptionID'), parameters('DnsZoneRG')), 'Microsoft.Resources/deployments', 'registerCustomDomainDns')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', parameters('DnsZoneSubscriptionID'), parameters('DnsZoneRG')), 'Microsoft.Resources/deployments', 'asuid')]"
+      ]
+    },
+    {
+      "condition": "[and(not(empty(parameters('customDomainName'))), not(empty(parameters('dnsZoneName'))))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "registerCustomDomainDns",
+      "subscriptionId": "[parameters('DnsZoneSubscriptionID')]",
+      "resourceGroup": "[parameters('DnsZoneRG')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "zoneName": {
+            "value": "[parameters('dnsZoneName')]"
+          },
+          "dnsRecord": {
+            "value": "[parameters('customDomainName')]"
+          },
+          "ARecord": {
+            "value": true
+          },
+          "dnsRecordValue": {
+            "value": "[reference(resourceId('Microsoft.Web/sites', 'webSiteName')).inboundIpAddress]"
+          },
+          "TTL": {
+            "value": "[parameters('dnsRecordTTL')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.1.41621",
+              "templateHash": "9758543957630208446"
+            }
+          },
+          "parameters": {
+            "zoneName": {
+              "type": "string"
+            },
+            "dnsRecord": {
+              "type": "string"
+            },
+            "TTL": {
+              "type": "int",
+              "defaultValue": 300
+            },
+            "ARecord": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "TxtRecord": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "dnsRecordValue": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[parameters('ARecord')]",
+              "type": "Microsoft.Network/dnsZones/A",
+              "apiVersion": "2018-05-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('dnsRecord'))]",
+              "properties": {
+                "TTL": "[parameters('TTL')]",
+                "ARecords": [
+                  {
+                    "ipv4Address": "[parameters('dnsRecordValue')]"
+                  }
+                ]
+              }
+            },
+            {
+              "condition": "[parameters('TxtRecord')]",
+              "type": "Microsoft.Network/dnsZones/TXT",
+              "apiVersion": "2018-05-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('dnsRecord'))]",
+              "properties": {
+                "TTL": "[parameters('TTL')]",
+                "TXTRecords": [
+                  {
+                    "value": [
+                      "[parameters('dnsRecordValue')]"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'webSiteName')]"
+      ]
+    },
+    {
+      "condition": "[and(not(empty(parameters('customDomainName'))), not(empty(parameters('dnsZoneName'))))]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "asuid",
+      "subscriptionId": "[parameters('DnsZoneSubscriptionID')]",
+      "resourceGroup": "[parameters('DnsZoneRG')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "zoneName": {
+            "value": "[parameters('dnsZoneName')]"
+          },
+          "dnsRecord": {
+            "value": "[format('asuid.{0}', parameters('customDomainName'))]"
+          },
+          "TxtRecord": {
+            "value": true
+          },
+          "dnsRecordValue": {
+            "value": "[reference(resourceId('Microsoft.Web/sites', 'webSiteName')).customDomainVerificationId]"
+          },
+          "TTL": {
+            "value": "[parameters('dnsRecordTTL')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.1.41621",
+              "templateHash": "9758543957630208446"
+            }
+          },
+          "parameters": {
+            "zoneName": {
+              "type": "string"
+            },
+            "dnsRecord": {
+              "type": "string"
+            },
+            "TTL": {
+              "type": "int",
+              "defaultValue": 300
+            },
+            "ARecord": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "TxtRecord": {
+              "type": "bool",
+              "defaultValue": false
+            },
+            "dnsRecordValue": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[parameters('ARecord')]",
+              "type": "Microsoft.Network/dnsZones/A",
+              "apiVersion": "2018-05-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('dnsRecord'))]",
+              "properties": {
+                "TTL": "[parameters('TTL')]",
+                "ARecords": [
+                  {
+                    "ipv4Address": "[parameters('dnsRecordValue')]"
+                  }
+                ]
+              }
+            },
+            {
+              "condition": "[parameters('TxtRecord')]",
+              "type": "Microsoft.Network/dnsZones/TXT",
+              "apiVersion": "2018-05-01",
+              "name": "[format('{0}/{1}', parameters('zoneName'), parameters('dnsRecord'))]",
+              "properties": {
+                "TTL": "[parameters('TTL')]",
+                "TXTRecords": [
+                  {
+                    "value": [
+                      "[parameters('dnsRecordValue')]"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', 'webSiteName')]"
+      ]
+    }
+  ]
+}

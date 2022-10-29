@@ -1,0 +1,1 @@
+output subnetId string = 'helloworld'

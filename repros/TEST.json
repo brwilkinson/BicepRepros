@@ -1,0 +1,253 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.6.18.56646",
+      "templateHash": "6674638816366292504"
+    }
+  },
+  "parameters": {
+    "Prefix": {
+      "type": "string"
+    },
+    "Environment": {
+      "type": "string",
+      "defaultValue": "D",
+      "allowedValues": [
+        "I",
+        "D",
+        "T",
+        "U",
+        "P",
+        "S",
+        "G",
+        "A"
+      ]
+    },
+    "DeploymentID": {
+      "type": "string",
+      "allowedValues": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16"
+      ]
+    },
+    "Stage": {
+      "type": "object"
+    },
+    "Extensions": {
+      "type": "object"
+    },
+    "Global": {
+      "type": "object"
+    },
+    "DeploymentInfo": {
+      "type": "object"
+    }
+  },
+  "variables": {
+    "Deployment": "[format('{0}-{1}-{2}-{3}{4}', parameters('Prefix'), parameters('Global').OrgName, parameters('Global').Appname, parameters('Environment'), parameters('DeploymentID'))]",
+    "DeploymentURI": "[toLower(format('{0}{1}{2}{3}{4}', parameters('Prefix'), parameters('Global').OrgName, parameters('Global').Appname, parameters('Environment'), parameters('DeploymentID')))]",
+    "HubKVJ": "[json(parameters('Global').hubKV)]",
+    "HubRGJ": "[json(parameters('Global').hubRG)]",
+    "gh": {
+      "hubKVPrefix": "[if(contains(variables('HubKVJ'), 'Prefix'), variables('HubKVJ').Prefix, parameters('Prefix'))]",
+      "hubKVOrgName": "[if(contains(variables('HubKVJ'), 'OrgName'), variables('HubKVJ').OrgName, parameters('Global').OrgName)]",
+      "hubKVAppName": "[if(contains(variables('HubKVJ'), 'AppName'), variables('HubKVJ').AppName, parameters('Global').AppName)]",
+      "hubKVRGName": "[if(contains(variables('HubKVJ'), 'RG'), variables('HubKVJ').RG, variables('HubRGJ').name)]"
+    },
+    "HubKVRGName": "[format('{0}-{1}-{2}-RG-{3}', variables('gh').hubKVPrefix, variables('gh').hubKVOrgName, variables('gh').hubKVAppName, variables('gh').hubKVRGName)]",
+    "HubKVName": "[toLower(format('{0}-{1}-{2}-{3}-kv{4}', variables('gh').hubKVPrefix, variables('gh').hubKVOrgName, variables('gh').hubKVAppName, variables('gh').hubKVRGName, variables('HubKVJ').name))]",
+    "TESTInfo": "[if(contains(parameters('DeploymentInfo'), 'TESTInfo'), parameters('DeploymentInfo').TESTInfo, createArray(createObject('name', 'test')))]"
+  },
+  "resources": [
+    {
+      "copy": {
+        "name": "TEST",
+        "count": "[length(variables('TESTInfo'))]"
+      },
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('dp{0}-TEST-{1}', variables('Deployment'), variables('TESTInfo')[copyIndex()].name)]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "Deployment": {
+            "value": "[variables('Deployment')]"
+          },
+          "DeploymentURI": {
+            "value": "[variables('DeploymentURI')]"
+          },
+          "testInfo": {
+            "value": "[variables('TESTInfo')[copyIndex()]]"
+          },
+          "Global": {
+            "value": "[parameters('Global')]"
+          },
+          "DeploymentID": {
+            "value": "[parameters('DeploymentID')]"
+          },
+          "Environment": {
+            "value": "[parameters('Environment')]"
+          },
+          "Prefix": {
+            "value": "[parameters('Prefix')]"
+          },
+          "vmAdminPassword": {
+            "reference": {
+              "keyVault": {
+                "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('HubKVRGName')), 'Microsoft.KeyVault/vaults', variables('HubKVName'))]"
+              },
+              "secretName": "localadmin"
+            }
+          },
+          "saPAT": {
+            "reference": {
+              "keyVault": {
+                "id": "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('HubKVRGName')), 'Microsoft.KeyVault/vaults', variables('HubKVName'))]"
+              },
+              "secretName": "sapatglobal"
+            }
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.6.18.56646",
+              "templateHash": "14891075206566585665"
+            }
+          },
+          "parameters": {
+            "Deployment": {
+              "type": "string"
+            },
+            "DeploymentURI": {
+              "type": "string"
+            },
+            "testInfo": {
+              "type": "object"
+            },
+            "Global": {
+              "type": "object"
+            },
+            "now": {
+              "type": "string",
+              "defaultValue": "[utcNow()]"
+            },
+            "Prefix": {
+              "type": "string"
+            },
+            "Environment": {
+              "type": "string"
+            },
+            "DeploymentID": {
+              "type": "string"
+            },
+            "SASStart": {
+              "type": "string",
+              "defaultValue": "[format('{0}-01', utcNow('yyyy-MM'))]"
+            },
+            "vmAdminPassword": {
+              "type": "secureString"
+            },
+            "saPAT": {
+              "type": "secureString"
+            }
+          },
+          "variables": {
+            "$fxv#0": "{\r\n  \"francecentral\": {\r\n    \"displayname\": \"France Central\",\r\n    \"location\": \"francecentral\",\r\n    \"PREFIX\": \"AFC1\",\r\n    \"pairedRegion\": \"francesouth\"\r\n  },\r\n  \"southeastasia\": {\r\n    \"displayname\": \"Southeast Asia\",\r\n    \"location\": \"southeastasia\",\r\n    \"PREFIX\": \"ASA1\",\r\n    \"pairedRegion\": \"eastasia\"\r\n  },\r\n  \"southafricawest\": {\r\n    \"displayname\": \"South Africa West\",\r\n    \"location\": \"southafricawest\",\r\n    \"PREFIX\": \"ASAW\",\r\n    \"pairedRegion\": \"southafricanorth\"\r\n  },\r\n  \"eastus2\": {\r\n    \"displayname\": \"East US 2\",\r\n    \"location\": \"eastus2\",\r\n    \"PREFIX\": \"AEU2\",\r\n    \"pairedRegion\": \"centralus\"\r\n  },\r\n  \"eastus\": {\r\n    \"displayname\": \"East US\",\r\n    \"location\": \"eastus\",\r\n    \"PREFIX\": \"AEU1\",\r\n    \"pairedRegion\": \"westus\"\r\n  },\r\n  \"jioindiawest\": {\r\n    \"displayname\": \"Jio India West\",\r\n    \"location\": \"jioindiawest\",\r\n    \"PREFIX\": \"AJIW\",\r\n    \"pairedRegion\": \"jioindiacentral\"\r\n  },\r\n  \"westcentralus\": {\r\n    \"displayname\": \"West Central US\",\r\n    \"location\": \"westcentralus\",\r\n    \"PREFIX\": \"AWCU\",\r\n    \"pairedRegion\": \"westus2\"\r\n  },\r\n  \"koreacentral\": {\r\n    \"displayname\": \"Korea Central\",\r\n    \"location\": \"koreacentral\",\r\n    \"PREFIX\": \"AKC1\",\r\n    \"pairedRegion\": \"koreasouth\"\r\n  },\r\n  \"uaecentral\": {\r\n    \"displayname\": \"UAE Central\",\r\n    \"location\": \"uaecentral\",\r\n    \"PREFIX\": \"AUC1\",\r\n    \"pairedRegion\": \"uaenorth\"\r\n  },\r\n  \"westus\": {\r\n    \"displayname\": \"West US\",\r\n    \"location\": \"westus\",\r\n    \"PREFIX\": \"AWU1\",\r\n    \"pairedRegion\": \"eastus\"\r\n  },\r\n  \"southafricanorth\": {\r\n    \"displayname\": \"South Africa North\",\r\n    \"location\": \"southafricanorth\",\r\n    \"PREFIX\": \"ASAN\",\r\n    \"pairedRegion\": \"southafricawest\"\r\n  },\r\n  \"australiacentral2\": {\r\n    \"displayname\": \"Australia Central 2\",\r\n    \"location\": \"australiacentral2\",\r\n    \"PREFIX\": \"AAC2\",\r\n    \"pairedRegion\": \"australiacentral2\"\r\n  },\r\n  \"francesouth\": {\r\n    \"displayname\": \"France South\",\r\n    \"location\": \"francesouth\",\r\n    \"PREFIX\": \"AFS1\",\r\n    \"pairedRegion\": \"francecentral\"\r\n  },\r\n  \"ukwest\": {\r\n    \"displayname\": \"UK West\",\r\n    \"location\": \"ukwest\",\r\n    \"PREFIX\": \"AUW1\",\r\n    \"pairedRegion\": \"uksouth\"\r\n  },\r\n  \"southindia\": {\r\n    \"displayname\": \"South India\",\r\n    \"location\": \"southindia\",\r\n    \"PREFIX\": \"ASI1\",\r\n    \"pairedRegion\": \"centralindia\"\r\n  },\r\n  \"centralus\": {\r\n    \"displayname\": \"Central US\",\r\n    \"location\": \"centralus\",\r\n    \"PREFIX\": \"ACU1\",\r\n    \"pairedRegion\": \"eastus2\"\r\n  },\r\n  \"germanynorth\": {\r\n    \"displayname\": \"Germany North\",\r\n    \"location\": \"germanynorth\",\r\n    \"PREFIX\": \"AGN1\",\r\n    \"pairedRegion\": \"germanywestcentral\"\r\n  },\r\n  \"koreasouth\": {\r\n    \"displayname\": \"Korea South\",\r\n    \"location\": \"koreasouth\",\r\n    \"PREFIX\": \"AKS1\",\r\n    \"pairedRegion\": \"koreacentral\"\r\n  },\r\n  \"westindia\": {\r\n    \"displayname\": \"West India\",\r\n    \"location\": \"westindia\",\r\n    \"PREFIX\": \"AWI1\",\r\n    \"pairedRegion\": \"southindia\"\r\n  },\r\n  \"westus2\": {\r\n    \"displayname\": \"West US 2\",\r\n    \"location\": \"westus2\",\r\n    \"PREFIX\": \"AWU2\",\r\n    \"pairedRegion\": \"westcentralus\"\r\n  },\r\n  \"northcentralus\": {\r\n    \"displayname\": \"North Central US\",\r\n    \"location\": \"northcentralus\",\r\n    \"PREFIX\": \"ANCU\",\r\n    \"pairedRegion\": \"southcentralus\"\r\n  },\r\n  \"westeurope\": {\r\n    \"displayname\": \"West Europe\",\r\n    \"location\": \"westeurope\",\r\n    \"PREFIX\": \"AWEU\",\r\n    \"pairedRegion\": \"northeurope\"\r\n  },\r\n  \"canadacentral\": {\r\n    \"displayname\": \"Canada Central\",\r\n    \"location\": \"canadacentral\",\r\n    \"PREFIX\": \"ACC1\",\r\n    \"pairedRegion\": \"canadaeast\"\r\n  },\r\n  \"southcentralus\": {\r\n    \"displayname\": \"South Central US\",\r\n    \"location\": \"southcentralus\",\r\n    \"PREFIX\": \"ASCU\",\r\n    \"pairedRegion\": \"northcentralus\"\r\n  },\r\n  \"norwayeast\": {\r\n    \"displayname\": \"Norway East\",\r\n    \"location\": \"norwayeast\",\r\n    \"PREFIX\": \"ANE1\",\r\n    \"pairedRegion\": \"norwaywest\"\r\n  },\r\n  \"japanwest\": {\r\n    \"displayname\": \"Japan West\",\r\n    \"location\": \"japanwest\",\r\n    \"PREFIX\": \"AJW1\",\r\n    \"pairedRegion\": \"japaneast\"\r\n  },\r\n  \"norwaywest\": {\r\n    \"displayname\": \"Norway West\",\r\n    \"location\": \"norwaywest\",\r\n    \"PREFIX\": \"ANW1\",\r\n    \"pairedRegion\": \"norwayeast\"\r\n  },\r\n  \"jioindiacentral\": {\r\n    \"displayname\": \"Jio India Central\",\r\n    \"location\": \"jioindiacentral\",\r\n    \"PREFIX\": \"AJIC\",\r\n    \"pairedRegion\": \"jioindiawest\"\r\n  },\r\n  \"centralindia\": {\r\n    \"displayname\": \"Central India\",\r\n    \"location\": \"centralindia\",\r\n    \"PREFIX\": \"ACI1\",\r\n    \"pairedRegion\": \"southindia\"\r\n  },\r\n  \"westus3\": {\r\n    \"displayname\": \"West US 3\",\r\n    \"location\": \"westus3\",\r\n    \"PREFIX\": \"AWU3\",\r\n    \"pairedRegion\": \"eastus\"\r\n  },\r\n  \"brazilsouth\": {\r\n    \"displayname\": \"Brazil South\",\r\n    \"location\": \"brazilsouth\",\r\n    \"PREFIX\": \"ABS1\",\r\n    \"pairedRegion\": \"southcentralus\"\r\n  },\r\n  \"eastasia\": {\r\n    \"displayname\": \"East Asia\",\r\n    \"location\": \"eastasia\",\r\n    \"PREFIX\": \"AEA1\",\r\n    \"pairedRegion\": \"southeastasia\"\r\n  },\r\n  \"swedencentral\": {\r\n    \"displayname\": \"Sweden Central\",\r\n    \"location\": \"swedencentral\",\r\n    \"PREFIX\": \"ASC1\",\r\n    \"pairedRegion\": \"swedensouth\"\r\n  },\r\n  \"uksouth\": {\r\n    \"displayname\": \"UK South\",\r\n    \"location\": \"uksouth\",\r\n    \"PREFIX\": \"AUS1\",\r\n    \"pairedRegion\": \"ukwest\"\r\n  },\r\n  \"switzerlandnorth\": {\r\n    \"displayname\": \"Switzerland North\",\r\n    \"location\": \"switzerlandnorth\",\r\n    \"PREFIX\": \"ASN1\",\r\n    \"pairedRegion\": \"switzerlandwest\"\r\n  },\r\n  \"canadaeast\": {\r\n    \"displayname\": \"Canada East\",\r\n    \"location\": \"canadaeast\",\r\n    \"PREFIX\": \"ACE1\",\r\n    \"pairedRegion\": \"canadacentral\"\r\n  },\r\n  \"australiasoutheast\": {\r\n    \"displayname\": \"Australia Southeast\",\r\n    \"location\": \"australiasoutheast\",\r\n    \"PREFIX\": \"AAS1\",\r\n    \"pairedRegion\": \"australiaeast\"\r\n  },\r\n  \"northeurope\": {\r\n    \"displayname\": \"North Europe\",\r\n    \"location\": \"northeurope\",\r\n    \"PREFIX\": \"ANEU\",\r\n    \"pairedRegion\": \"westeurope\"\r\n  },\r\n  \"germanywestcentral\": {\r\n    \"displayname\": \"Germany West Central\",\r\n    \"location\": \"germanywestcentral\",\r\n    \"PREFIX\": \"AGWC\",\r\n    \"pairedRegion\": \"germanynorth\"\r\n  },\r\n  \"japaneast\": {\r\n    \"displayname\": \"Japan East\",\r\n    \"location\": \"japaneast\",\r\n    \"PREFIX\": \"AJE1\",\r\n    \"pairedRegion\": \"japanwest\"\r\n  },\r\n  \"uaenorth\": {\r\n    \"displayname\": \"UAE North\",\r\n    \"location\": \"uaenorth\",\r\n    \"PREFIX\": \"AUN1\",\r\n    \"pairedRegion\": \"uaecentral\"\r\n  },\r\n  \"australiaeast\": {\r\n    \"displayname\": \"Australia East\",\r\n    \"location\": \"australiaeast\",\r\n    \"PREFIX\": \"AAE1\",\r\n    \"pairedRegion\": \"australiasoutheast\"\r\n  },\r\n  \"switzerlandwest\": {\r\n    \"displayname\": \"Switzerland West\",\r\n    \"location\": \"switzerlandwest\",\r\n    \"PREFIX\": \"ASW1\",\r\n    \"pairedRegion\": \"switzerlandnorth\"\r\n  },\r\n  \"australiacentral\": {\r\n    \"displayname\": \"Australia Central\",\r\n    \"location\": \"australiacentral\",\r\n    \"PREFIX\": \"AAC1\",\r\n    \"pairedRegion\": \"australiacentral\"\r\n  },\r\n  \"brazilsoutheast\": {\r\n    \"displayname\": \"Brazil Southeast\",\r\n    \"location\": \"brazilsoutheast\",\r\n    \"PREFIX\": \"ABSE\",\r\n    \"pairedRegion\": \"brazilsouth\"\r\n  }\r\n}\r\n",
+            "GlobalRGJ": "[json(parameters('Global').GlobalRG)]",
+            "GlobalSAJ": "[json(parameters('Global').GlobalSA)]",
+            "HubKVJ": "[json(parameters('Global').hubKV)]",
+            "HubRGJ": "[json(parameters('Global').hubRG)]",
+            "HubAAJ": "[json(parameters('Global').hubAA)]",
+            "regionLookup": "[json(variables('$fxv#0'))]",
+            "primaryPrefix": "[variables('regionLookup')[parameters('Global').PrimaryLocation].prefix]",
+            "gh": {
+              "globalRGPrefix": "[if(contains(variables('GlobalRGJ'), 'Prefix'), variables('GlobalRGJ').Prefix, variables('primaryPrefix'))]",
+              "globalRGOrgName": "[if(contains(variables('GlobalRGJ'), 'OrgName'), variables('GlobalRGJ').OrgName, parameters('Global').OrgName)]",
+              "globalRGAppName": "[if(contains(variables('GlobalRGJ'), 'AppName'), variables('GlobalRGJ').AppName, parameters('Global').AppName)]",
+              "globalRGName": "[if(contains(variables('GlobalRGJ'), 'name'), variables('GlobalRGJ').name, format('{0}{1}', parameters('Environment'), parameters('DeploymentID')))]",
+              "globalSAPrefix": "[if(contains(variables('GlobalSAJ'), 'Prefix'), variables('GlobalSAJ').Prefix, variables('primaryPrefix'))]",
+              "globalSAOrgName": "[if(contains(variables('GlobalSAJ'), 'OrgName'), variables('GlobalSAJ').OrgName, parameters('Global').OrgName)]",
+              "globalSAAppName": "[if(contains(variables('GlobalSAJ'), 'AppName'), variables('GlobalSAJ').AppName, parameters('Global').AppName)]",
+              "globalSARGName": "[if(contains(variables('GlobalSAJ'), 'RG'), variables('GlobalSAJ').RG, if(contains(variables('GlobalRGJ'), 'name'), variables('GlobalRGJ').name, format('{0}{1}', parameters('Environment'), parameters('DeploymentID'))))]",
+              "hubRGPrefix": "[if(contains(variables('HubRGJ'), 'Prefix'), variables('HubRGJ').Prefix, parameters('Prefix'))]",
+              "hubRGOrgName": "[if(contains(variables('HubRGJ'), 'OrgName'), variables('HubRGJ').OrgName, parameters('Global').OrgName)]",
+              "hubRGAppName": "[if(contains(variables('HubRGJ'), 'AppName'), variables('HubRGJ').AppName, parameters('Global').AppName)]",
+              "hubRGRGName": "[if(contains(variables('HubRGJ'), 'name'), variables('HubRGJ').name, if(contains(variables('HubRGJ'), 'name'), variables('HubRGJ').name, format('{0}{1}', parameters('Environment'), parameters('DeploymentID'))))]",
+              "hubKVPrefix": "[if(contains(variables('HubKVJ'), 'Prefix'), variables('HubKVJ').Prefix, parameters('Prefix'))]",
+              "hubKVOrgName": "[if(contains(variables('HubKVJ'), 'OrgName'), variables('HubKVJ').OrgName, parameters('Global').OrgName)]",
+              "hubKVAppName": "[if(contains(variables('HubKVJ'), 'AppName'), variables('HubKVJ').AppName, parameters('Global').AppName)]",
+              "hubKVRGName": "[if(contains(variables('HubKVJ'), 'RG'), variables('HubKVJ').RG, variables('HubRGJ').name)]",
+              "hubAAPrefix": "[if(contains(variables('HubAAJ'), 'Prefix'), variables('HubAAJ').Prefix, parameters('Prefix'))]",
+              "hubAAOrgName": "[if(contains(variables('HubAAJ'), 'OrgName'), variables('HubAAJ').OrgName, parameters('Global').OrgName)]",
+              "hubAAAppName": "[if(contains(variables('HubAAJ'), 'AppName'), variables('HubAAJ').AppName, parameters('Global').AppName)]",
+              "hubAARGName": "[if(contains(variables('HubAAJ'), 'RG'), variables('HubAAJ').RG, variables('HubRGJ').name)]"
+            },
+            "globalRGName": "[format('{0}-{1}-{2}-RG-{3}', variables('gh').globalRGPrefix, variables('gh').globalRGOrgName, variables('gh').globalRGAppName, variables('gh').globalRGName)]",
+            "globalSAName": "[toLower(format('{0}{1}{2}{3}sa{4}', variables('gh').globalSAPrefix, variables('gh').globalSAOrgName, variables('gh').globalSAAppName, variables('gh').globalSARGName, variables('GlobalSAJ').name))]",
+            "url": "[format('{0}/ext-DSC/DSC-SFM.zip', parameters('Global')._artifactsLocation)]"
+          },
+          "resources": [],
+          "outputs": {
+            "keys": {
+              "type": "object",
+              "value": "[listKeys(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('globalRGName')), 'Microsoft.Storage/storageAccounts', variables('globalSAName')), '2021-09-01')]"
+            },
+            "storageFileUri": {
+              "type": "string",
+              "value": "[variables('url')]"
+            },
+            "path": {
+              "type": "string",
+              "value": "[last(split(parameters('Global')._artifactsLocation, '/'))]"
+            },
+            "myContainerSAS": {
+              "type": "string",
+              "value": "[listServiceSas(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('globalRGName')), 'Microsoft.Storage/storageAccounts', variables('globalSAName')), '2021-09-01', createObject('canonicalizedResource', format('/blob/{0}/{1}', variables('globalSAName'), last(split(parameters('Global')._artifactsLocation, '/'))), 'signedResource', 'c', 'signedProtocol', 'https', 'signedPermission', 'r', 'signedServices', 'b', 'signedExpiry', dateTimeAdd(parameters('SASStart'), 'P6M'), 'keyToSign', 'key1')).serviceSasToken]"
+            },
+            "start": {
+              "type": "string",
+              "value": "[parameters('SASStart')]"
+            },
+            "end": {
+              "type": "string",
+              "value": "[dateTimeAdd(parameters('SASStart'), 'P6M')]"
+            },
+            "configurationUrlSasToken": {
+              "type": "string",
+              "value": "[format('?{0}', listServiceSAS(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('globalRGName')), 'Microsoft.Storage/storageAccounts', variables('globalSAName')), '2021-09-01', createObject('canonicalizedResource', format('/blob/{0}/{1}', variables('globalSAName'), last(split(parameters('Global')._artifactsLocation, '/'))), 'signedResource', 'c', 'signedProtocol', 'https', 'signedPermission', 'r', 'signedServices', 'b', 'signedExpiry', dateTimeAdd(parameters('SASStart'), 'P6M'), 'keyToSign', 'key1')).serviceSasToken)]"
+            },
+            "configurationDataUrlSasToken": {
+              "type": "string",
+              "value": "[format('?{0}', listServiceSAS(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('globalRGName')), 'Microsoft.Storage/storageAccounts', variables('globalSAName')), '2021-09-01', createObject('canonicalizedResource', format('/blob/{0}/{1}', variables('globalSAName'), last(split(parameters('Global')._artifactsLocation, '/ext-CD'))), 'signedResource', 'c', 'signedProtocol', 'https', 'signedPermission', 'rl', 'signedServices', 'b', 'signedExpiry', dateTimeAdd(parameters('SASStart'), 'P6M'), 'keyToSign', 'key1')).serviceSasToken)]"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.9.1.41621",
+      "templateHash": "7804241388133381808"
+    }
+  },
+  "parameters": {
+    "loadBalancerConfig": {
+      "type": "object",
+      "defaultValue": {}
+    }
+  },
+  "variables": {
+    "loadBalancer": "[not(empty(parameters('loadBalancerConfig')))]"
+  },
+  "resources": [
+    {
+      "condition": "[variables('loadBalancer')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2020-10-01",
+      "name": "[format('loadbalancer-{0}', if(variables('loadBalancer'), parameters('loadBalancerConfig').name, ''))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "message": {
+            "value": "[parameters('loadBalancerConfig').name]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.9.1.41621",
+              "templateHash": "208163092634992434"
+            }
+          },
+          "parameters": {
+            "message": {
+              "type": "string"
+            }
+          },
+          "resources": [],
+          "outputs": {
+            "messageLower": {
+              "type": "string",
+              "value": "[toLower(parameters('message'))]"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
