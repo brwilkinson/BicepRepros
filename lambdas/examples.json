@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.11.1.770",
+      "templateHash": "8587378755562492116"
+    }
+  },
+  "variables": {
+    "dogs": [
+      {
+        "isShowDog": false,
+        "name": "Evie",
+        "age": 5,
+        "interests": [
+          "Ball",
+          "Frisbee"
+        ]
+      },
+      {
+        "isShowDog": true,
+        "name": "Casper",
+        "age": 3,
+        "interests": [
+          "Other dogs"
+        ]
+      },
+      {
+        "name": "Indy",
+        "age": 2,
+        "interests": [
+          "Butter"
+        ]
+      },
+      {
+        "name": "Kira",
+        "age": 8,
+        "interests": [
+          "Rubs"
+        ]
+      }
+    ]
+  },
+  "resources": [],
+  "outputs": {
+    "oldDogs": {
+      "type": "array",
+      "value": "[filter(variables('dogs'), lambda('dog', greaterOrEquals(lambdaVariables('dog').age, 6)))]"
+    },
+    "oldandyoungDogs": {
+      "type": "array",
+      "value": "[filter(variables('dogs'), lambda('dog', or(greaterOrEquals(lambdaVariables('dog').age, 6), lessOrEquals(lambdaVariables('dog').age, 3))))]"
+    },
+    "ShowDog": {
+      "type": "array",
+      "value": "[filter(variables('dogs'), lambda('dog', and(contains(lambdaVariables('dog'), 'isShowDog'), bool(lambdaVariables('dog').isShowDog))))]"
+    },
+    "ShowDogsandyoungDogs": {
+      "type": "array",
+      "value": "[filter(variables('dogs'), lambda('dog', or(lessOrEquals(lambdaVariables('dog').age, 3), and(contains(lambdaVariables('dog'), 'isShowDog'), lambdaVariables('dog').isShowDog))))]"
+    },
+    "youngDogsandShowDogs": {
+      "type": "array",
+      "value": "[filter(variables('dogs'), lambda('dog', or(and(contains(lambdaVariables('dog'), 'isShowDog'), lambdaVariables('dog').isShowDog), lessOrEquals(lambdaVariables('dog').age, 3))))]"
+    }
+  }
+}
